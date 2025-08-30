@@ -1,2 +1,84 @@
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000000000000000000000000000000000000..c18dd8d83ceed1806b50b0aaa46beb7e335fff13
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1 @@
++__pycache__/
+diff --git a/src/__init__.py b/src/__init__.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/src/budgeting/__init__.py b/src/budgeting/__init__.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/src/budgeting/budget.py b/src/budgeting/budget.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..4ae198cc9968f43286323ead5461a16af2a68ff5
+--- /dev/null
++++ b/src/budgeting/budget.py
+@@ -0,0 +1,26 @@
++class Budget:
++    """Represents a spending category with a limit.
++
++    Expenses can be recorded per period (e.g. by month). The remaining
++    amount is calculated per period as the limit minus recorded expenses.
++    """
++
++    def __init__(self, category: str, limit: float):
++        self.category = category
++        self.limit = float(limit)
++        self._expenses = {}
++
++    def add_expense(self, amount: float, period: str = "default") -> None:
++        """Record an expense for the given period."""
++        self._expenses[period] = self._expenses.get(period, 0) + float(amount)
++
++    def spent(self, period: str = "default") -> float:
++        """Return the total amount spent for the given period."""
++        return self._expenses.get(period, 0.0)
++
++    def remaining_amount(self, period: str = "default") -> float:
++        """Compute how much is left for the budget in the given period.
++
++        A negative value indicates the budget has been exceeded.
++        """
++        return self.limit - self.spent(period)
+diff --git a/tests/budgeting/test_budget.py b/tests/budgeting/test_budget.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..01603d449faff6aeb148deca83d281749b175daf
+--- /dev/null
++++ b/tests/budgeting/test_budget.py
+@@ -0,0 +1,30 @@
++import os
++import sys
++
++# Ensure the src directory is on the path for imports
++sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../src")))
++
++from budgeting.budget import Budget
++
++
++def test_remaining_amount_under_budget():
++    budget = Budget("groceries", 100)
++    budget.add_expense(40)
++    assert budget.remaining_amount() == 60
++
++
++def test_remaining_amount_over_budget():
++    budget = Budget("groceries", 100)
++    budget.add_expense(120)
++    assert budget.remaining_amount() == -20
++
++
++def test_remaining_amount_multiple_periods():
++    budget = Budget("entertainment", 100)
++    budget.add_expense(80, period="2023-01")  # under budget
++    budget.add_expense(120, period="2023-02")  # over budget
++
++    assert budget.remaining_amount("2023-01") == 20
++    assert budget.remaining_amount("2023-02") == -20
++    # no expenses recorded for March
++    assert budget.remaining_amount("2023-03") == 100
+
 __pycache__/
 *.pyc
